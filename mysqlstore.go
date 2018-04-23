@@ -36,11 +36,12 @@ func (ts *TokenStore) Create(info oauth2.TokenInfo) (err error) {
 	}
 
 	if code := info.GetCode(); code != "" {
-		stmt, err := ts.db.Prepare("INSERT INTO user_oauth (user_id,client_id,auth_code,code_created_at,code_expire,access_token,access_created_at,access_expire,refresh_token,refresh_created_at,refresh_expire,redirect_url)		 VALUE (?,?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE auth_code=?,code_created_at=?,code_expire=?,redirect_url=?;")
+		stmt, err := ts.db.Prepare("INSERT INTO user_oauth (user_id,client_id,scope,auth_code,code_created_at,code_expire,access_token,access_created_at,access_expire,refresh_token,refresh_created_at,refresh_expire,redirect_url)		 VALUE (?,?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE auth_code=?,code_created_at=?,code_expire=?,redirect_url=?;")
 		checkErr(err)
 		_, err = stmt.Exec(
 			info.GetUserID(),
 			info.GetClientID(),
+			info.GetScope(),
 			info.GetCode(),
 			info.GetCodeCreateAt().Format("2006-01-02 15:04:05"),
 			info.GetCodeExpiresIn(),
@@ -127,7 +128,7 @@ func (ts *TokenStore) RemoveByRefresh(refresh string) (err error) {
 func (ts *TokenStore) getData(userID,clientID string) (ti oauth2.TokenInfo, err error) {
 	// query
 	// println("GETDATA : "+userID+"|"+clientID)
-	rows, err := ts.db.Query("SELECT user_id,client_id,auth_code,code_created_at,code_expire,access_token,access_created_at,access_expire,refresh_token,refresh_created_at,refresh_expire,redirect_url FROM user_oauth WHERE user_id = ? AND client_id = ?  limit 1",userID,clientID)
+	rows, err := ts.db.Query("SELECT user_id,client_id,scope,auth_code,code_created_at,code_expire,access_token,access_created_at,access_expire,refresh_token,refresh_created_at,refresh_expire,redirect_url FROM user_oauth WHERE user_id = ? AND client_id = ?  limit 1",userID,clientID)
 	checkErr(err)
 	var tm = models.NewToken()
 	var codeCreateAt string
@@ -137,7 +138,7 @@ func (ts *TokenStore) getData(userID,clientID string) (ti oauth2.TokenInfo, err 
 	var refreshCreateAt string
 	var refreshExpire string
 	for rows.Next() {
-		err = rows.Scan( &tm.UserID, &tm.ClientID , &tm.Code, &codeCreateAt,&codeExpire, &tm.Access ,&accessCreateAt, &accessExpire , &tm.Refresh ,&refreshCreateAt, &refreshExpire,&tm.RedirectURI)
+		err = rows.Scan( &tm.UserID, &tm.ClientID , &tm.Scope, &tm.Code, &codeCreateAt,&codeExpire, &tm.Access ,&accessCreateAt, &accessExpire , &tm.Refresh ,&refreshCreateAt, &refreshExpire,&tm.RedirectURI)
 	}
 	tCode,_ := time.Parse("2006-01-02 15:04:05", codeCreateAt)
 	dCode,_ := time.ParseDuration(codeExpire)

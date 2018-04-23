@@ -3,6 +3,7 @@ CREATE TABLE user_oauth
 (
     user_id VARCHAR(19) NOT NULL,
     client_id VARCHAR(19) NOT NULL,
+    scope TEXT,
     auth_code VARCHAR(55),
     code_created_at DATETIME,
     code_expire BIGINT(50),
