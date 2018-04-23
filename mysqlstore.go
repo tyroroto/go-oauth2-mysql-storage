@@ -36,7 +36,7 @@ func (ts *TokenStore) Create(info oauth2.TokenInfo) (err error) {
 	}
 
 	if code := info.GetCode(); code != "" {
-		stmt, err := ts.db.Prepare("INSERT INTO user_oauth (user_id,client_id,scope,auth_code,code_created_at,code_expire,access_token,access_created_at,access_expire,refresh_token,refresh_created_at,refresh_expire,redirect_url)		 VALUE (?,?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE auth_code=?,code_created_at=?,code_expire=?,redirect_url=?;")
+		stmt, err := ts.db.Prepare("INSERT INTO user_oauth (user_id,client_id,scope,auth_code,code_created_at,code_expire,access_token,access_created_at,access_expire,refresh_token,refresh_created_at,refresh_expire,redirect_url)		 VALUE (?,?,?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE scope=?,auth_code=?,code_created_at=?,code_expire=?,redirect_url=?;")
 		checkErr(err)
 		_, err = stmt.Exec(
 			info.GetUserID(),
@@ -51,7 +51,9 @@ func (ts *TokenStore) Create(info oauth2.TokenInfo) (err error) {
 			info.GetRefresh(),
 			info.GetRefreshCreateAt().Format("2006-01-02 15:04:05"),
 			info.GetRefreshExpiresIn(),
-			info.GetRedirectURI(),info.GetCode(),
+			info.GetRedirectURI(),
+			info.GetScope(),
+			info.GetCode(),
 			info.GetCodeCreateAt().Format("2006-01-02 15:04:05"),
 			info.GetCodeExpiresIn(),
 			info.GetRedirectURI())
